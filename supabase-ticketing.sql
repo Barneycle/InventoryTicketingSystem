@@ -134,10 +134,12 @@ CREATE POLICY "Allow assignee or admin insert ticket_attachments"
     )
   );
 
+-- Uploader can delete their own; assignee or admin can delete any attachment on the ticket
 CREATE POLICY "Allow assignee or admin delete ticket_attachments"
   ON public.ticket_attachments FOR DELETE TO authenticated
   USING (
-    EXISTS (
+    uploaded_by = auth.uid()
+    OR EXISTS (
       SELECT 1 FROM public.tickets t
       WHERE t.id = ticket_attachments.ticket_id
       AND (t.assigned_to = auth.uid() OR EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.role = 'admin'))
@@ -183,6 +185,7 @@ CREATE POLICY "Allow insert ticket attachments for assignee or admin"
     )
   );
 
+-- Uploader can delete their own file; assignee or admin can delete any attachment on the ticket
 CREATE POLICY "Allow delete ticket attachments for assignee or admin"
   ON storage.objects FOR DELETE TO authenticated
   USING (
@@ -190,10 +193,13 @@ CREATE POLICY "Allow delete ticket attachments for assignee or admin"
     AND EXISTS (
       SELECT 1 FROM public.ticket_attachments a
       WHERE a.storage_path = (storage.objects.name)
-      AND EXISTS (
-        SELECT 1 FROM public.tickets t
-        WHERE t.id = a.ticket_id
-        AND (t.assigned_to = auth.uid() OR EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.role = 'admin'))
+      AND (
+        a.uploaded_by = auth.uid()
+        OR EXISTS (
+          SELECT 1 FROM public.tickets t
+          WHERE t.id = a.ticket_id
+          AND (t.assigned_to = auth.uid() OR EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.role = 'admin'))
+        )
       )
     )
   );

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
-  LayoutDashboard, Package, Box, Ticket,
+  LayoutDashboard, Package, Box, Ticket, Users,
   ChevronLeft, ChevronRight, LogOut, User, Menu, X,
 } from 'lucide-react'
 import ThemeToggle from '../ui/ThemeToggle'
@@ -12,6 +12,7 @@ const nav = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/inventory', label: 'Inventory', icon: Package },
   { to: '/tickets', label: 'Tickets', icon: Ticket },
+  { to: '/users', label: 'Users', icon: Users, adminOnly: true },
 ]
 
 function saveCollapsed(val) {
@@ -71,7 +72,7 @@ function SidebarInner({ collapsed, onExpand, onCollapse, onClose }) {
 
       {/* Nav */}
       <nav className="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto">
-        {nav.map(({ to, label, icon: Icon }) => (
+        {nav.filter((item) => (item.adminOnly ? role === 'admin' : true)).map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}

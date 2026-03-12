@@ -30,12 +30,12 @@ function deviceLabel(item) {
 
 export default function TicketDrawer({ ticketId, onClose }) {
   const open = !!ticketId
-  const { user, role } = useAuth()
+  const { role } = useAuth()
   const { data: ticket, isLoading } = useTicket(ticketId)
   const { data: profiles = [] } = useProfiles()
   const [editModalOpen, setEditModalOpen] = useState(false)
 
-  const canEdit = !!ticket && (user?.id === ticket.assigned_to || role === 'admin')
+  const canEdit = !!ticket && role === 'admin'
   const profileMap = Object.fromEntries(profiles.map((p) => [p.id, p]))
 
   useEffect(() => {
@@ -251,24 +251,27 @@ function CommentList({ ticketId, canEdit, profileMap }) {
           </li>
         ))}
       </ul>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-        <textarea
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          placeholder="Add a comment…"
-          className="block w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-zinc-50 dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[72px] resize-y"
-          rows={2}
-        />
-        <Button type="submit" size="sm" disabled={!body.trim() || addComment.isPending}>
-          {addComment.isPending ? 'Sending…' : 'Post comment'}
-        </Button>
-      </form>
+      {canEdit && (
+        <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="Add a comment…"
+            className="block w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-zinc-50 dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[72px] resize-y"
+            rows={2}
+          />
+          <Button type="submit" size="sm" disabled={!body.trim() || addComment.isPending}>
+            {addComment.isPending ? 'Sending…' : 'Post comment'}
+          </Button>
+        </form>
+      )}
     </div>
   )
 }
 
 function AttachmentList({ ticketId, canEdit }) {
   const fileInputRef = useRef(null)
+  const { user } = useAuth()
   const { data: attachments = [], isLoading } = useTicketAttachments(ticketId)
   const uploadAttachment = useUploadTicketAttachment(ticketId)
   const deleteAttachment = useDeleteTicketAttachment(ticketId)
@@ -296,25 +299,23 @@ function AttachmentList({ ticketId, canEdit }) {
 
   return (
     <div className="space-y-2">
-      {canEdit && (
-        <div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            className="hidden"
-            onChange={handleFileChange}
-            disabled={uploadAttachment.isPending}
-          />
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploadAttachment.isPending}
-          >
-            {uploadAttachment.isPending ? 'Uploading…' : 'Upload file'}
-          </Button>
-        </div>
-      )}
+      <div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          onChange={handleFileChange}
+          disabled={uploadAttachment.isPending}
+        />
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploadAttachment.isPending}
+        >
+          {uploadAttachment.isPending ? 'Uploading…' : 'Upload file'}
+        </Button>
+      </div>
       {attachments.length === 0 ? (
         <p className="text-sm text-gray-500 dark:text-gray-400">No attachments yet.</p>
       ) : (
@@ -336,7 +337,7 @@ function AttachmentList({ ticketId, canEdit }) {
                 >
                   <Download className="w-3.5 h-3.5" />
                 </button>
-                {canEdit && (
+                {(canEdit || att.uploaded_by === user?.id) && (
                   <button
                     type="button"
                     onClick={() => deleteAttachment.mutate(att)}

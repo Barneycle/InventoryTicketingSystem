@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import InventoryPage from './pages/InventoryPage'
 import TicketsPage from './pages/TicketsPage'
+import UsersPage from './pages/UsersPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,6 +34,7 @@ export default function App() {
                 <Route path="/dashboard" element={<ErrorBoundary><DashboardPage /></ErrorBoundary>} />
                 <Route path="/inventory" element={<ErrorBoundary><InventoryPage /></ErrorBoundary>} />
                 <Route path="/tickets" element={<ErrorBoundary><TicketsPage /></ErrorBoundary>} />
+                <Route path="/users" element={<ErrorBoundary><UsersPage /></ErrorBoundary>} />
               </Route>
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
